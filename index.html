@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A random choice tool that stores data only in this browser.">
+  <meta name="theme-color" content="#090909">
+  <title>Random Box</title>
+  <link rel="stylesheet" href="styles.css?v=2">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <button class="icon-button menu-toggle" id="menuToggle" type="button" aria-label="Expand or collapse the box list" aria-expanded="true">
+        <span></span><span></span><span></span>
+      </button>
+      <div class="brand">
+        <strong>RANDOM BOX</strong>
+        <small>Leave the choice to chance</small>
+      </div>
+      <span class="local-badge">Stored in this browser only</span>
+      <button class="secondary-button manage-button" id="manageButton" type="button">Manage</button>
+      <button class="primary-button" id="quickAddPaper" type="button"><span aria-hidden="true">+</span> <span id="quickAddLabel">Add paper</span></button>
+    </header>
+
+    <div class="workspace">
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-heading">
+          <div>
+            <p class="eyebrow">My collection</p>
+            <h1>Random Box</h1>
+          </div>
+          <button class="square-button" id="addBoxButton" type="button" aria-label="Create box" title="Create box">+</button>
+        </div>
+        <nav class="box-list" id="boxList" aria-label="Box list"></nav>
+        <button class="library-button" id="openLibraryButton" type="button">
+          <span class="library-symbol" aria-hidden="true">◇</span>
+          <span><strong>Paper library</strong><small id="libraryCount">0 papers</small></span>
+          <span aria-hidden="true">›</span>
+        </button>
+        <p class="storage-note">Your data is not uploaded or synced with other browsers or devices.</p>
+      </aside>
+
+      <main class="main-content">
+        <section class="box-toolbar">
+          <div>
+            <p class="eyebrow">Current box</p>
+            <h2 id="activeBoxName">No boxes yet</h2>
+            <p id="activeBoxMeta">Create a box to get started</p>
+          </div>
+          <div class="toolbar-actions">
+            <button class="secondary-button" id="renameBoxButton" type="button">Rename</button>
+            <button class="icon-button danger-icon" id="deleteBoxButton" type="button" aria-label="Delete current box" title="Delete current box">×</button>
+          </div>
+        </section>
+
+        <section class="no-box-state" id="noBoxState" hidden>
+          <span class="empty-box-mark" aria-hidden="true">□</span>
+          <p class="eyebrow">Start with an empty box</p>
+          <h3>Create your first random box</h3>
+          <p>Create new papers, or place the same paper in multiple boxes.</p>
+          <button class="primary-button" id="createFirstBoxButton" type="button"><span aria-hidden="true">+</span> Create box</button>
+        </section>
+
+        <section class="playground" id="playground" aria-label="Random box interactive area">
+          <div class="ambient-copy" aria-hidden="true">
+            <span>Drag the box</span><i></i><span>Shake the papers</span><i></i><span>Draw an answer</span>
+          </div>
+          <div class="box-positioner" id="boxPositioner">
+            <div class="random-box" id="randomBox" role="img" aria-label="Draggable translucent random box with paper contents hidden">
+              <div class="box-back"></div>
+              <canvas class="physics-canvas" id="physicsCanvas" aria-hidden="true"></canvas>
+              <div class="box-front">
+                <span>RANDOM</span>
+                <small id="boxFrontCount">EMPTY</small>
+              </div>
+              <div class="box-lid" aria-hidden="true"></div>
+              <div class="box-handle" aria-hidden="true"></div>
+            </div>
+          </div>
+          <div class="drawn-paper-animation" id="drawnPaperAnimation" aria-hidden="true"></div>
+          <div class="empty-state" id="emptyState" hidden>
+            <strong>This box is empty</strong>
+            <span>Add a few papers, then leave the choice to chance.</span>
+          </div>
+        </section>
+
+        <section class="control-dock">
+          <button class="secondary-button dock-add" id="addPaperButton" type="button"><span aria-hidden="true">+</span> Add paper</button>
+          <button class="draw-button" id="drawButton" type="button">
+            <span class="draw-mark" aria-hidden="true">↝</span>
+            <span><strong>Shake and draw</strong><small>Every paper has an equal chance</small></span>
+          </button>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <dialog class="modal" id="paperDialog">
+    <form id="paperForm">
+      <header class="modal-header">
+        <div><p class="eyebrow">Add to current box</p><h2>Add paper</h2></div>
+        <button class="icon-button close-dialog" type="button" aria-label="Close">×</button>
+      </header>
+      <div class="tabs" role="tablist">
+        <button class="tab active" id="newPaperTab" type="button" role="tab" aria-selected="true">New paper</button>
+        <button class="tab" id="existingPaperTab" type="button" role="tab" aria-selected="false">Choose existing</button>
+      </div>
+      <section class="tab-panel" id="newPaperPanel">
+        <label class="field-label" for="newPaperText">Paper content</label>
+        <textarea id="newPaperText" maxlength="120" rows="4" placeholder="For example: Start tonight"></textarea>
+        <div class="input-help"><span>Write a clear option or outcome</span><span id="paperCharCount">0 / 120</span></div>
+      </section>
+      <section class="tab-panel" id="existingPaperPanel" hidden>
+        <div class="selection-list" id="existingPaperList"></div>
+      </section>
+      <p class="form-error" id="paperFormError" role="alert"></p>
+      <footer class="modal-actions">
+        <button class="secondary-button close-dialog" type="button">Cancel</button>
+        <button class="primary-button" type="submit" id="paperSubmitButton">Create and add</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <dialog class="modal compact-modal" id="boxDialog">
+    <form id="boxForm">
+      <header class="modal-header">
+        <div><p class="eyebrow" id="boxDialogEyebrow">New box</p><h2 id="boxDialogTitle">Create box</h2></div>
+        <button class="icon-button close-box-dialog" type="button" aria-label="Close">×</button>
+      </header>
+      <label class="field-label" for="boxNameInput">Box name</label>
+      <input id="boxNameInput" type="text" maxlength="30" placeholder="For example: What should I eat tonight?" autocomplete="off">
+      <div id="boxPaperChooser">
+        <p class="field-label">Add existing papers <small>Optional</small></p>
+        <div class="selection-list compact-list" id="boxPaperList"></div>
+      </div>
+      <p class="form-error" id="boxFormError" role="alert"></p>
+      <footer class="modal-actions">
+        <button class="secondary-button close-box-dialog" type="button">Cancel</button>
+        <button class="primary-button" type="submit" id="boxSubmitButton">Create box</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <dialog class="modal library-modal" id="libraryDialog">
+    <div class="dialog-shell">
+      <header class="modal-header">
+        <div><p class="eyebrow">Shared across all boxes</p><h2>Paper library</h2></div>
+        <button class="icon-button close-library-dialog" type="button" aria-label="Close">×</button>
+      </header>
+      <p class="dialog-description">A paper can be placed in multiple boxes. Deleting it removes it from every box.</p>
+      <div class="library-list" id="libraryList"></div>
+      <footer class="modal-actions">
+        <button class="secondary-button close-library-dialog" type="button">Done</button>
+      </footer>
+    </div>
+  </dialog>
+
+  <dialog class="modal management-modal" id="managementDialog">
+    <div class="dialog-shell management-shell">
+      <header class="modal-header management-header">
+        <div><p class="eyebrow">Organize everything</p><h2 id="managementTitle">Manage</h2></div>
+        <button class="icon-button" id="closeManagementButton" type="button" aria-label="Close">×</button>
+      </header>
+      <div class="tabs management-tabs" id="managementTabs" role="tablist">
+        <button class="tab active" type="button" role="tab" data-management-tab="boxes" aria-selected="true">Boxes</button>
+        <button class="tab" type="button" role="tab" data-management-tab="papers" aria-selected="false">Papers</button>
+      </div>
+      <section class="management-view" id="managementView"></section>
+    </div>
+  </dialog>
+
+  <dialog class="result-modal" id="resultDialog">
+    <div class="result-shell">
+      <p class="eyebrow">The box chose</p>
+      <div class="result-paper" id="resultPaper"></div>
+      <p class="result-box-name" id="resultBoxName"></p>
+      <div class="result-actions">
+        <button class="primary-button" id="returnResultButton" type="button">Return to box</button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog class="modal compact-modal confirm-modal" id="confirmDialog">
+    <div class="dialog-shell">
+      <div class="warning-mark" aria-hidden="true">!</div>
+      <h2 id="confirmTitle">Confirm deletion?</h2>
+      <p id="confirmMessage"></p>
+      <div class="modal-actions centered-actions">
+        <button class="secondary-button" id="confirmCancel" type="button">Cancel</button>
+        <button class="danger-button" id="confirmAccept" type="button">Delete</button>
+      </div>
+    </div>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+  <noscript><div class="noscript-message">This tool requires JavaScript to save data locally and draw random papers.</div></noscript>
+  <script src="vendor/node_modules/matter-js/build/matter.min.js"></script>
+  <script src="script/storage.js"></script>
+  <script src="script/store.js"></script>
+  <script src="script/physics.js?v=5"></script>
+  <script src="script/drag.js?v=2"></script>
+  <script src="script/ui.js?v=2"></script>
+  <script src="script/management.js?v=3"></script>
+  <script src="script/main.js?v=3"></script>
+</body>
+</html>

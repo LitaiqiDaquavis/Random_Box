@@ -28,4 +28,6 @@ But if you have to make a recurring decision, such as "*Where should I go for a 
 
 - First, Open the website of this repo. (*sounds like I said nothing another time, yeah?*)
 
-- Next, Add a new box, write some 
+- Then, Add a new box and papers. Use `Manage` button to move papers into the box
+
+- Finally, Click the yellow button at the bottom of the screen.

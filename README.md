@@ -26,7 +26,7 @@ But if you have to make a recurring decision, such as "*Where should I go for a 
 
 ## How to Use
 
-- First, Open the website of this repo. (*sounds like I said nothing...*🤡)
+- First, Open the website of this repo. ( *sounds like I said nothing...* 🤡)
 
 - Then, Add a new box and papers. Use `Manage` button to move papers into the box
 

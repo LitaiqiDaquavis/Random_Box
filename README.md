@@ -34,6 +34,6 @@ But if you have to make a recurring decision, such as "*Where should I go for a 
 
 ## Physics & The End
 
-You see, I make a code for physics of the papers, its very hard...
+You see, I make a code for physics of the papers, its very hard...And thanks for the matter.js
 
 So if you started this repo, we will say a huge "THANK YOU"

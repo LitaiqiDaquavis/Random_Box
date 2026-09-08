@@ -6,12 +6,12 @@
   <meta name="description" content="A random choice tool that stores data only in this browser.">
   <meta name="theme-color" content="#090909">
   <title>Random Box</title>
-  <link rel="stylesheet" href="styles.css?v=2">
+  <link rel="stylesheet" href="styles.css?v=8">
 </head>
 <body>
   <div class="app-shell">
     <header class="topbar">
-      <button class="icon-button menu-toggle" id="menuToggle" type="button" aria-label="Expand or collapse the box list" aria-expanded="true">
+      <button class="icon-button menu-toggle" id="menuToggle" type="button" aria-label="Collapse menu" aria-expanded="true" aria-controls="sidebar">
         <span></span><span></span><span></span>
       </button>
       <div class="brand">
@@ -24,7 +24,7 @@
     </header>
 
     <div class="workspace">
-      <aside class="sidebar" id="sidebar">
+      <aside class="sidebar" id="sidebar" aria-hidden="false">
         <div class="sidebar-heading">
           <div>
             <p class="eyebrow">My collection</p>
@@ -49,7 +49,6 @@
             <p id="activeBoxMeta">Create a box to get started</p>
           </div>
           <div class="toolbar-actions">
-            <button class="secondary-button" id="renameBoxButton" type="button">Rename</button>
             <button class="icon-button danger-icon" id="deleteBoxButton" type="button" aria-label="Delete current box" title="Delete current box">×</button>
           </div>
         </section>
@@ -70,10 +69,7 @@
             <div class="random-box" id="randomBox" role="img" aria-label="Draggable translucent random box with paper contents hidden">
               <div class="box-back"></div>
               <canvas class="physics-canvas" id="physicsCanvas" aria-hidden="true"></canvas>
-              <div class="box-front">
-                <span>RANDOM</span>
-                <small id="boxFrontCount">EMPTY</small>
-              </div>
+              <div class="box-front"></div>
               <div class="box-lid" aria-hidden="true"></div>
               <div class="box-handle" aria-hidden="true"></div>
             </div>
@@ -89,7 +85,7 @@
           <button class="secondary-button dock-add" id="addPaperButton" type="button"><span aria-hidden="true">+</span> Add paper</button>
           <button class="draw-button" id="drawButton" type="button">
             <span class="draw-mark" aria-hidden="true">↝</span>
-            <span><strong>Shake and draw</strong><small>Every paper has an equal chance</small></span>
+            <span><strong id="drawButtonLabel">Shake and draw</strong><small id="drawButtonHint">Every paper has an equal chance</small></span>
           </button>
         </section>
       </main>
@@ -193,15 +189,26 @@
     </div>
   </dialog>
 
+  <dialog class="modal compact-modal notice-modal" id="capacityDialog">
+    <div class="dialog-shell">
+      <div class="notice-mark" aria-hidden="true">!</div>
+      <h2 id="capacityTitle">Many papers</h2>
+      <p id="capacityMessage"></p>
+      <div class="modal-actions centered-actions">
+        <button class="primary-button" id="capacityAccept" type="button">Got it</button>
+      </div>
+    </div>
+  </dialog>
+
   <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
   <noscript><div class="noscript-message">This tool requires JavaScript to save data locally and draw random papers.</div></noscript>
   <script src="vendor/node_modules/matter-js/build/matter.min.js"></script>
   <script src="script/storage.js"></script>
-  <script src="script/store.js"></script>
-  <script src="script/physics.js?v=5"></script>
+  <script src="script/store.js?v=2"></script>
+  <script src="script/physics.js?v=7"></script>
   <script src="script/drag.js?v=2"></script>
-  <script src="script/ui.js?v=2"></script>
-  <script src="script/management.js?v=3"></script>
-  <script src="script/main.js?v=3"></script>
+  <script src="script/ui.js?v=5"></script>
+  <script src="script/management.js?v=6"></script>
+  <script src="script/main.js?v=6"></script>
 </body>
 </html>

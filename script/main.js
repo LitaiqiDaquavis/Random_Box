@@ -11,6 +11,8 @@ let confirmAction = null;
 let drawing = false;
 let reopenManagement = false;
 let manager;
+let pendingCapacityNotice = null;
+let knownBoxCounts = new Map(store.boxes.map((box) => [box.id, box.paperIds.length]));
 
 function refresh() {
   renderApp(store, physics);
@@ -18,9 +20,37 @@ function refresh() {
 }
 
 function commit(message) {
+  const capacityNotice = detectCapacityNotice();
   if (!store.commit()) showToast("Could not save locally. Check this browser's storage permissions.");
   else if (message) showToast(message);
   refresh();
+  if (capacityNotice) {
+    pendingCapacityNotice = capacityNotice;
+    setTimeout(presentCapacityNotice, 0);
+  }
+}
+
+function detectCapacityNotice() {
+  let notice = null;
+  store.boxes.forEach((box) => {
+    const previous = knownBoxCounts.get(box.id) || 0;
+    const current = box.paperIds.length;
+    if (current > previous && previous < 17 && current >= 17) notice = "disabled";
+    else if (!notice && current > previous && previous < 15 && current >= 15) notice = "warning";
+  });
+  knownBoxCounts = new Map(store.boxes.map((box) => [box.id, box.paperIds.length]));
+  return notice;
+}
+
+function presentCapacityNotice() {
+  if (!pendingCapacityNotice || elements.capacityDialog.open) return;
+  const disabled = pendingCapacityNotice === "disabled";
+  pendingCapacityNotice = null;
+  elements.capacityTitle.textContent = disabled ? "Physics paused" : "Many papers";
+  elements.capacityMessage.textContent = disabled
+    ? "This box now has 17 or more papers. Physics was turned off automatically to protect performance."
+    : "This box now contains many papers. Physics may slow down, so consider removing some papers.";
+  elements.capacityDialog.showModal();
 }
 
 function setPaperTab(mode) {
@@ -159,6 +189,14 @@ function deletePaper(id) {
 
 async function drawPaper() {
   if (!store.activePapers.length || drawing) return;
+  if (store.activePapers.length >= 17) {
+    const paper = store.activePapers[Math.floor(Math.random() * store.activePapers.length)];
+    drawnPaperId = paper.id;
+    elements.resultPaper.textContent = paper.text;
+    elements.resultBoxName.textContent = `From “${store.activeBox.name}”`;
+    elements.resultDialog.showModal();
+    return;
+  }
   drawing = true;
   elements.appShell.classList.add("is-drawing");
   elements.randomBox.classList.add("shaking");
@@ -244,6 +282,10 @@ manager = new ManagementController({
 elements.menuToggle.addEventListener("click", () => {
   const collapsed = elements.appShell.classList.toggle("sidebar-collapsed");
   elements.menuToggle.setAttribute("aria-expanded", String(!collapsed));
+  elements.menuToggle.setAttribute("aria-label", collapsed ? "Expand menu" : "Collapse menu");
+  const sidebar = document.querySelector("#sidebar");
+  sidebar.setAttribute("aria-hidden", String(collapsed));
+  sidebar.inert = collapsed;
 });
 document.querySelector("#manageButton").addEventListener("click", () => manager.open());
 document.querySelector("#closeManagementButton").addEventListener("click", () => manager.close());
@@ -257,7 +299,6 @@ elements.boxList.addEventListener("click", (event) => {
 });
 document.querySelector("#addBoxButton").addEventListener("click", () => openBoxDialog("create"));
 document.querySelector("#createFirstBoxButton").addEventListener("click", () => openBoxDialog("create"));
-elements.renameBoxButton.addEventListener("click", () => openBoxDialog("rename"));
 elements.deleteBoxButton.addEventListener("click", deleteActiveBox);
 elements.addPaperButton.addEventListener("click", () => openPaperDialog());
 elements.quickAddPaper.addEventListener("click", () => store.activeBox ? openPaperDialog() : openBoxDialog("create"));
@@ -283,12 +324,13 @@ document.querySelector("#confirmAccept").addEventListener("click", () => {
   elements.confirmDialog.close();
   if (action) action();
 });
+document.querySelector("#capacityAccept").addEventListener("click", () => elements.capacityDialog.close());
 document.querySelectorAll(".close-dialog").forEach((button) => button.addEventListener("click", () => elements.paperDialog.close()));
 document.querySelectorAll(".close-box-dialog").forEach((button) => button.addEventListener("click", () => elements.boxDialog.close()));
 document.querySelectorAll(".close-library-dialog").forEach((button) => button.addEventListener("click", () => elements.libraryDialog.close()));
 elements.paperDialog.addEventListener("close", reopenManagerIfNeeded);
 elements.boxDialog.addEventListener("close", reopenManagerIfNeeded);
-[elements.paperDialog, elements.boxDialog, elements.libraryDialog, elements.confirmDialog].forEach((dialog) => {
+[elements.paperDialog, elements.boxDialog, elements.libraryDialog, elements.confirmDialog, elements.capacityDialog].forEach((dialog) => {
   dialog.addEventListener("click", (event) => { if (event.target === dialog) dialog.close(); });
 });
 

@@ -35,6 +35,11 @@ class RandomBoxStore {
 
   renameActiveBox(name) { if (this.activeBox) this.activeBox.name = name; }
 
+  renameBox(id, name) {
+    const box = this.boxes.find((item) => item.id === id);
+    if (box) box.name = name;
+  }
+
   deleteActiveBox() {
     if (!this.activeBox) return;
     const id = this.activeBox.id;

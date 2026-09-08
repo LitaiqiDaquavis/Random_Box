@@ -1,11 +1,12 @@
 (function () {
 const elements = {
   appShell: $(".app-shell"), mainContent: $(".main-content"), menuToggle: $("#menuToggle"), boxList: $("#boxList"),
-  activeBoxName: $("#activeBoxName"), activeBoxMeta: $("#activeBoxMeta"), boxFrontCount: $("#boxFrontCount"),
+  activeBoxName: $("#activeBoxName"), activeBoxMeta: $("#activeBoxMeta"),
   randomBox: $("#randomBox"), boxPositioner: $("#boxPositioner"), playground: $("#playground"),
   noBoxState: $("#noBoxState"), emptyState: $("#emptyState"), drawButton: $("#drawButton"),
+  drawButtonLabel: $("#drawButtonLabel"), drawButtonHint: $("#drawButtonHint"),
   addPaperButton: $("#addPaperButton"), quickAddPaper: $("#quickAddPaper"), quickAddLabel: $("#quickAddLabel"),
-  renameBoxButton: $("#renameBoxButton"), deleteBoxButton: $("#deleteBoxButton"), libraryCount: $("#libraryCount"),
+  deleteBoxButton: $("#deleteBoxButton"), libraryCount: $("#libraryCount"),
   paperDialog: $("#paperDialog"), paperForm: $("#paperForm"), newPaperText: $("#newPaperText"),
   paperCharCount: $("#paperCharCount"), paperFormError: $("#paperFormError"), newPaperPanel: $("#newPaperPanel"),
   existingPaperPanel: $("#existingPaperPanel"), newPaperTab: $("#newPaperTab"), existingPaperTab: $("#existingPaperTab"),
@@ -16,7 +17,8 @@ const elements = {
   libraryList: $("#libraryList"), resultDialog: $("#resultDialog"), resultPaper: $("#resultPaper"),
   resultBoxName: $("#resultBoxName"), confirmDialog: $("#confirmDialog"), confirmTitle: $("#confirmTitle"),
   confirmMessage: $("#confirmMessage"), toast: $("#toast"), physicsCanvas: $("#physicsCanvas"),
-  drawnPaperAnimation: $("#drawnPaperAnimation")
+  drawnPaperAnimation: $("#drawnPaperAnimation"), capacityDialog: $("#capacityDialog"),
+  capacityTitle: $("#capacityTitle"), capacityMessage: $("#capacityMessage")
 };
 
 let toastTimer;
@@ -27,7 +29,6 @@ function renderApp(store, physics) {
   elements.boxList.innerHTML = store.boxes.length ? store.boxes.map((item) => {
     const active = item.id === box?.id;
     return `<button class="box-list-item${active ? " active" : ""}" type="button" data-box-id="${item.id}" aria-current="${active ? "true" : "false"}">
-      <span class="mini-box" aria-hidden="true">R</span>
       <span class="box-list-copy"><strong>${escapeHtml(item.name)}</strong><small>${item.paperIds.length ? "Ready to draw" : "Needs papers"}</small></span>
       <span class="box-count">${item.paperIds.length}</span>
     </button>`;
@@ -37,7 +38,6 @@ function renderApp(store, physics) {
   elements.noBoxState.hidden = Boolean(box);
   elements.playground.hidden = !box;
   document.querySelector(".control-dock").hidden = !box;
-  elements.renameBoxButton.disabled = !box;
   elements.deleteBoxButton.disabled = !box;
   elements.quickAddLabel.textContent = box ? "Add paper" : "Create box";
   if (!box) {
@@ -48,10 +48,13 @@ function renderApp(store, physics) {
   }
   elements.activeBoxName.textContent = box.name;
   elements.activeBoxMeta.textContent = `${papers.length} paper${papers.length === 1 ? "" : "s"}`;
-  elements.boxFrontCount.textContent = papers.length ? `${papers.length} INSIDE` : "EMPTY";
+  const physicsEnabled = papers.length < 17;
+  physics.setEnabled(physicsEnabled);
+  elements.drawButtonLabel.textContent = physicsEnabled ? "Shake and draw" : "Random pick";
+  elements.drawButtonHint.textContent = physicsEnabled ? "Every paper has an equal chance" : "Physics paused for performance";
   elements.drawButton.disabled = papers.length === 0;
   elements.emptyState.hidden = papers.length !== 0;
-  physics.sync(papers);
+  physics.sync(physicsEnabled ? papers : papers.slice(0, 17));
 }
 
 function renderPaperChoices(target, papers, selectedIds = []) {

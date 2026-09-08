@@ -15,6 +15,7 @@ class PaperPhysics {
     this.height = 1;
     this.lastTime = performance.now();
     this.accumulator = 0;
+    this.enabled = true;
     this.resizeObserver = new ResizeObserver(() => this.resize());
     this.resizeObserver.observe(canvas);
     this.resize();
@@ -39,6 +40,20 @@ class PaperPhysics {
   sync(papers) {
     const ids = papers.map((paper) => paper.id);
     if (ids.join("|") !== this.paperIds.join("|")) this.rebuild(ids);
+  }
+
+  setEnabled(enabled) {
+    if (enabled === this.enabled) return;
+    this.enabled = enabled;
+    this.accumulator = 0;
+    if (!enabled) {
+      if (this.frame !== null) cancelAnimationFrame(this.frame);
+      this.frame = null;
+      this.context.clearRect(0, 0, this.width, this.height);
+      return;
+    }
+    this.lastTime = performance.now();
+    this.frame = requestAnimationFrame((time) => this.tick(time));
   }
 
   rebuild(ids) {
@@ -70,9 +85,11 @@ class PaperPhysics {
       this.bodies.push(body);
     });
     MatterApi.Composite.add(this.engine.world, [...boundaries, ...this.bodies]);
+    if (!this.enabled) this.draw();
   }
 
   kick(dx = 0, dy = 0, strength = 1, randomized = true) {
+    if (!this.enabled) return;
     this.bodies.forEach((body) => {
       MatterApi.Sleeping.set(body, false);
       const randomX = randomized ? (Math.random() - 0.5) * 0.02 * strength : 0;
@@ -105,6 +122,7 @@ class PaperPhysics {
   showAllPapers() { this.hiddenPaperId = null; }
 
   tick(time) {
+    if (!this.enabled) return;
     const fixedStep = 1000 / 30;
     const elapsed = Math.max(0, Math.min(250, time - this.lastTime || fixedStep));
     this.lastTime = time;
